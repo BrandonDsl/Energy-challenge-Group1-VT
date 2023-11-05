@@ -2,19 +2,35 @@ from math import*
 import numpy as np
 import pandas as pd
 import matplotlib.pylab as plt
+from scipy import stats
 
 building_index = ["B22_c","B40_c","B41_c","B42_c","B44_c","B45_c"]
 
 
+
 for building in range(len(building_index)):
     Q = pd.read_table(f"Experimental energy signature/Q_dot_csv/Q_dot_{str(building_index[building])}.csv",delimiter = ";")
+    P = Q['P']
+    T = Q['T']
+    filtered_P = []
+    filtered_T = []
+    
+    for i in range (len(P)):
+        if(T[i]<19):
+            filtered_P.append(P[i])
+            filtered_T.append(T[i])
+    
+    regr = stats.linregress(filtered_T,filtered_P)    
     # Energy signature
     plt.scatter(Q.iloc[:]["T"], Q.iloc[:]["P"],s=1)
+    plt.plot(T,regr.intercept + regr.slope*T,color ="red")
     plt.grid()
     plt.xlabel("Temperature [C°]")
     plt.ylabel(r"Q$_{load}$ [kW]")
+    plt.ylim(bottom = 0)
     plt.xticks(np.arange(-15,45,5))
     plt.title(str(building_index[building])+" energy signature")
+    plt.legend([r"Q$_{load}$","Linear regression"])
     plt.savefig(f"Experimental energy signature/Energy-signature/{str(building_index[building])}.png")
     plt.clf()
     print(f"{str(building_index[building])} plotted")
